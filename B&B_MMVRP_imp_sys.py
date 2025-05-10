@@ -1,4 +1,4 @@
-# PYTHON
+
 import sys
 import heapq
 from time import time

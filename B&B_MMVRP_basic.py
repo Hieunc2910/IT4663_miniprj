@@ -1,6 +1,5 @@
 import sys
 import heapq
-from collections import defaultdict
 
 
 def read_data(file_path=None):

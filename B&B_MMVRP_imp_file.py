@@ -1,7 +1,5 @@
 import sys
 import heapq
-import numpy as np
-from collections import defaultdict
 from time import time
 
 
