@@ -7,16 +7,12 @@ def read_data(file_path=None):
             lines = f.readlines()
     else:
         lines = sys.stdin.readlines()
-
     n, k = map(int, lines[0].split())
     distance_matrix = []
-
     for i in range(1, n + 2):
         row = list(map(int, lines[i].split()))
         distance_matrix.append(row)
-
     return n, k, distance_matrix
-
 
 class State:
     def __init__(self, n, k):
@@ -116,14 +112,10 @@ def format_solution(solution):
 def main():
     file_path = "10 2.txt"
     n, k, distances = read_data(file_path)
-
     solution = min_max_vrp(n, k, distances)
-
     if solution:
         print(format_solution(solution))
     else:
         print("No solution found")
-
-
 if __name__ == "__main__":
     main()
