@@ -4,8 +4,14 @@ import random
 from time import time
 
 
-def read_data():
-    lines = sys.stdin.readlines()
+def read_data(file_path=None):
+    """Read input data from file or stdin"""
+    if file_path:
+        with open(file_path, 'r') as f:
+            lines = f.readlines()
+    else:
+        lines = sys.stdin.readlines()
+
     n, k = map(int, lines[0].split())
     distance_matrix = []
 
@@ -143,7 +149,7 @@ def optimize_cluster_route(cluster, distances):
 
     # Start from depot
     current = 0
-    route = []  # Start with empty route (depot is implied)
+    route = [0]
     unvisited = cluster.copy()
 
     # Build initial route with nearest neighbor
@@ -153,14 +159,14 @@ def optimize_cluster_route(cluster, distances):
         unvisited.remove(nearest)
         current = nearest
 
-    # 2-opt improvement (only for customer-to-customer connections)
+    # 2-opt improvement
     if len(route) > 2:
         improved = True
         while improved:
             improved = False
             for i in range(0, len(route) - 1):
                 for j in range(i + 1, len(route)):
-                    # Skip if i is first node (connected to depot)
+
                     if i == 0:
                         from_i = 0  # Depot
                     else:
@@ -172,7 +178,7 @@ def optimize_cluster_route(cluster, distances):
                     if j < len(route) - 1:
                         from_j = route[j + 1]
                     else:
-                        continue  # Skip if j is the last node
+                        continue
 
                     current_dist = distances[from_i][to_i] + distances[to_j][from_j]
                     new_dist = distances[from_i][to_j] + distances[to_i][from_j]
@@ -186,7 +192,7 @@ def optimize_cluster_route(cluster, distances):
 
     # Calculate total distance (from depot through all nodes)
     total_dist = 0
-    prev_node = 0  # Start at depot
+    prev_node = 0
     for node in route:
         total_dist += distances[prev_node][node]
         prev_node = node
@@ -196,7 +202,7 @@ def optimize_cluster_route(cluster, distances):
 
 def compute_lower_bound(state, distances, min_outgoing):
     """Enhanced lower bound using cluster-based reasoning"""
-    # Current max distance
+
     current_max = max(state.distances) if state.distances else 0
 
     # If all nodes are visited, return the current max distance
@@ -242,7 +248,6 @@ def compute_lower_bound(state, distances, min_outgoing):
 def cluster_first_route_second(n, k, distances, time_limit=25):
     start_time = time()
 
-    # Preprocessing
     min_outgoing = preprocess_distances(distances, n)
 
     # Step 1: Create geographical clusters
@@ -329,7 +334,6 @@ def cluster_first_route_second(n, k, distances, time_limit=25):
         max_branching = min(3, len(current.unvisited))
 
         for _, node_id, best_vehicle in regret_values[:max_branching]:
-            # Try multiple promising vehicles
             vehicles_to_try = [best_vehicle]
 
             # Add a few more vehicles that are promising
@@ -369,7 +373,8 @@ def format_solution(solution):
 
 
 def main():
-    n, k, distances = read_data()
+    file_path = "1000 20.txt"
+    n, k, distances = read_data(file_path)
     best_solution = None
     best_max_distance = float('inf')
     num_iterations = 100
@@ -377,7 +382,6 @@ def main():
     start_time = time()
 
     for i in range(num_iterations):
-        iteration_start = time()
         solution = cluster_first_route_second(n, k, distances, time_limit=25 / num_iterations)
 
         if solution:
@@ -388,7 +392,6 @@ def main():
         if time() - start_time > 24:
             break
 
-    end_time = time()
 
     if best_solution:
         print(format_solution(best_solution))
