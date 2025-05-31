@@ -5,7 +5,7 @@ from time import time
 
 
 def read_data(file_path=None):
-    """Read input data from file or stdin"""
+
     if file_path:
         with open(file_path, 'r') as f:
             lines = f.readlines()

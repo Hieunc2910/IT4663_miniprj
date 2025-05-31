@@ -3,13 +3,8 @@ import heapq
 from time import time
 
 
-def read_data(file_path=None):
-    """Read input data from file or stdin"""
-    if file_path:
-        with open(file_path, 'r') as f:
-            lines = f.readlines()
-    else:
-        lines = sys.stdin.readlines()
+def read_data():
+    lines = sys.stdin.readlines()
     n, k = map(int, lines[0].split())
     distance_matrix = []
     for i in range(1, n + 2):
@@ -107,7 +102,7 @@ def compute_lower_bound(state, distances, min_outgoing, min_incoming):
 
 def min_max_vrp(n, k, distances):
     start_time = time()
-    timeout = 600
+    timeout = 300
 
     min_outgoing, min_incoming = preprocess_distances(distances, n)
     initial_solution, best_max_distance = greedy_solve(n, k, distances)
@@ -120,34 +115,9 @@ def min_max_vrp(n, k, distances):
 
     queue, nodes_explored, best_states = [root], 0, {}
 
-    # Debug info
-    print(f"=== MIN-MAX VRP SOLVER ===", file=sys.stderr)
-    print(f"Initial Greedy Solution: {best_max_distance}", file=sys.stderr)
-    print(f"Root Lower Bound: {root.lower_bound:.2f}", file=sys.stderr)
-    print(
-        f"Gap: {best_max_distance - root.lower_bound:.2f} ({100 * (best_max_distance - root.lower_bound) / best_max_distance:.1f}%)",
-        file=sys.stderr)
-    print(f"{'Time':<8} {'Nodes':<8} {'Queue':<8} {'Best':<8} {'LB':<8} {'Gap':<8} {'Gap%':<6}", file=sys.stderr)
-    print("-" * 60, file=sys.stderr)
-
-    last_report_time = start_time
-    report_interval = 5.0  # Report every 2 seconds
-
     while queue and nodes_explored < 1000000 and time() - start_time < timeout:
         nodes_explored += 1
         current = heapq.heappop(queue)
-        current_time = time()
-
-        # Periodic reporting
-        if current_time - last_report_time >= report_interval:
-            current_lower_bound = min(state.lower_bound for state in queue) if queue else current.lower_bound
-            gap = best_max_distance - current_lower_bound
-            gap_percent = 100 * gap / best_max_distance if best_max_distance > 0 else 0
-
-            print(f"{current_time - start_time:6.1f}s {nodes_explored:7d} {len(queue):7d} "
-                  f"{best_max_distance:7.0f} {current_lower_bound:6.2f} {gap:6.2f} {gap_percent:5.1f}%",
-                  file=sys.stderr)
-            last_report_time = current_time
 
         # State pruning
         state_key = (frozenset(current.unvisited), tuple(sorted(current.distances)))
@@ -158,12 +128,7 @@ def min_max_vrp(n, k, distances):
         if not current.unvisited:
             max_distance = max(current.distances)
             if max_distance < best_max_distance:
-                old_best = best_max_distance
                 best_max_distance, best_solution = max_distance, current
-                improvement = old_best - best_max_distance
-                print(
-                    f"*** NEW BEST: {best_max_distance} (improved by {improvement:.2f}) at {current_time - start_time:.1f}s, node {nodes_explored} ***",
-                    file=sys.stderr)
             continue
 
         if current.lower_bound >= best_max_distance:
@@ -208,25 +173,6 @@ def min_max_vrp(n, k, distances):
                 if new_state.lower_bound < best_max_distance:
                     heapq.heappush(queue, new_state)
 
-    # Final report
-    final_time = time() - start_time
-    final_lower_bound = min(state.lower_bound for state in queue) if queue else 0
-    final_gap = best_max_distance - final_lower_bound
-    final_gap_percent = 100 * final_gap / best_max_distance if best_max_distance > 0 else 0
-
-    print("-" * 60, file=sys.stderr)
-    print(f"FINAL: Time={final_time:.1f}s, Nodes={nodes_explored}, Best={best_max_distance}", file=sys.stderr)
-    print(f"Lower Bound={final_lower_bound:.2f}, Gap={final_gap:.2f} ({final_gap_percent:.1f}%)", file=sys.stderr)
-
-    if final_time >= timeout:
-        print("Terminated: TIME LIMIT", file=sys.stderr)
-    elif nodes_explored >= 1000000:
-        print("Terminated: NODE LIMIT", file=sys.stderr)
-    elif not queue:
-        print("Terminated: SEARCH COMPLETE", file=sys.stderr)
-
-    print("=" * 60, file=sys.stderr)
-
     return best_solution
 
 
@@ -241,12 +187,10 @@ def format_solution(solution):
 
 
 def main():
-    file_path = "100 5.txt"
-    n, k, distances = read_data(file_path)
+    n, k, distances = read_data()
     solution = min_max_vrp(n, k, distances)
     if solution:
         print(format_solution(solution))
-
 
 if __name__ == "__main__":
     main()
